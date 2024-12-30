@@ -2,7 +2,7 @@
   "name": "copilot-re",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "src/CopilotRE.js",
   "type": "module",
   "scripts": {
     "dev": ""
