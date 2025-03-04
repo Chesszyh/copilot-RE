@@ -9,9 +9,10 @@ if (!process.env.cookie) {
 // Init CopilotRE
 const copilot = new CopilotRE({
     githubCookie: process.env.cookie,
-    authToken: process.env.auth,
 });
 
+// Generate auth token
+await copilot.generateAuthToken();
 
 // Let's get all our old conversations
 const threads = await copilot.getAllThreads();

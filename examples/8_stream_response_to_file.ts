@@ -11,6 +11,7 @@ const copilot = new CopilotRE({
     githubCookie: process.env.cookie,
 });
 
+// Generate auth token
 await copilot.generateAuthToken();
 
 const myStream: WriteStream = fs.createWriteStream("model_output.txt");

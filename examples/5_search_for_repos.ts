@@ -8,8 +8,10 @@ if (!process.env.cookie) {
 // Init CopilotRE
 const copilot = new CopilotRE({
     githubCookie: process.env.cookie,
-    authToken: process.env.auth,
 });
+
+// Generate auth token
+await copilot.generateAuthToken();
 
 // Traverse through all available repositories
 const repoDetail = await copilot.getRepoList("github copilot");

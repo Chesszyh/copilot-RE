@@ -10,6 +10,7 @@ const copilot = new CopilotRE({
     githubCookie: process.env.cookie,
 });
 
+// Generate auth token
 await copilot.generateAuthToken();
 
 // Lets search for some repo

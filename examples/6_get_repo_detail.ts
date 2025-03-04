@@ -8,8 +8,10 @@ if (!process.env.cookie) {
 // Init CopilotRE
 const copilot = new CopilotRE({
     githubCookie: process.env.cookie,
-    authToken: process.env.auth,
 });
+
+// Generate auth token
+await copilot.generateAuthToken();
 
 // First we search for repositories to get its ID
 const repoLists = await copilot.getRepoList("rohitaryal/copilot-RE");
