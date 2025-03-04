@@ -1,23 +1,28 @@
 /**
  * Used for website related requests
+ * Like getting authentication token,
  */
 export const WEBHEADERS = new Headers({
-  accept: "*/*",
-  "accept-language": "en-GB,en;q=0.7",
-  "cache-control": "max-age=0",
-  "copilot-integration-id": "copilot-chat",
-  priority: "u=1, i",
-  "sec-ch-ua": '"Brave";v="131", "Chromium";v="131", "Not_A Brand";v="24"',
-  "sec-ch-ua-mobile": "?0",
-  "sec-ch-ua-platform": '"Linux"',
-  "sec-fetch-dest": "empty",
-  "sec-fetch-mode": "cors",
-  "sec-fetch-site": "cross-site",
-  "sec-gpc": "1",
-  Referer: "https://github.com/",
-  "Referrer-Policy": "strict-origin-when-cross-origin",
-});
-
+  'accept': 'application/json',
+  'accept-language': 'en-GB,en;q=0.8',
+  'cache-control': 'no-cache',
+  'content-length': '0',
+  'content-type': 'application/json',
+  'github-verified-fetch': 'true',
+  'origin': 'https://github.com',
+  'pragma': 'no-cache',
+  'priority': 'u=1, i',
+  'referer': 'https://github.com/copilot',
+  'sec-ch-ua': '"Not(A:Brand";v="99", "Brave";v="133", "Chromium";v="133"',
+  'sec-ch-ua-mobile': '?0',
+  'sec-ch-ua-platform': '"Linux"',
+  'sec-fetch-dest': 'empty',
+  'sec-fetch-mode': 'cors',
+  'sec-fetch-site': 'same-origin',
+  'sec-gpc': '1',
+  'user-agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36',
+  'x-requested-with': 'XMLHttpRequest',
+})
 /**
  * Used for API related requests
  */
