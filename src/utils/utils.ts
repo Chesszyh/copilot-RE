@@ -57,7 +57,7 @@ export const prompt = (question: string): Promise<string> => {
 }
 
 export const saveCookie = (key: string, value: string) => {
-    let cookieContent = "";
+    let cookieContent = "{}";
 
     if (fs.existsSync(".cookie")) {
         cookieContent = fs.readFileSync(".cookie", "utf-8");
