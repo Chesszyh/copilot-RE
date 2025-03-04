@@ -37,7 +37,7 @@ if (repoDetail.status != "success") {
 }
 
 const response = await copilot.generateContent({
-    "prompt": "Can you describe about the repository that I have attached",
+    "prompt": "Can you find some bugs in this repository?",
     "model": "gpt-4o",
     "reference": repoDetail.body,
     "sinkStream": process.stdout,
