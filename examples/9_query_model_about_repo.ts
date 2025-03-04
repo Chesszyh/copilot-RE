@@ -1,6 +1,4 @@
-import fs, { WriteStream } from "fs";
 import CopilotRE from "../src";
-import { collapseTextChangeRangesAcrossMultipleVersions } from "typescript";
 
 if (!process.env.cookie) {
     console.error("Please set the cookie environment variable.");
