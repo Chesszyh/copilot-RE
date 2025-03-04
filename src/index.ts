@@ -1,5 +1,5 @@
 import { Writable } from "stream";
-import { logger } from "./utils/logger";
+import { logger } from "./utils/utils";
 import { request } from "./utils/networkUtils";
 import { AGENTS_URL, APIHEADERS, COPILOT_TOKEN_URL, FUNCTIONS, GRAPHQL_URL, MODELS_URL, REPO_URL, THREADS_URL, WEBHEADERS } from "./utils/constants";
 
@@ -458,11 +458,18 @@ class CopilotRE {
         while (true) {
             const { done, value } = await reader.read();
 
-            if (done)
+            if (done) {
+                // New line because last message line gets overwritten
+                // by the user prompt (no idea why)
+                if (sinkStream) {
+                    sinkStream.write("\n");
+                }
+
                 return {
                     status: "success",
                     body: message
                 };
+            }
 
             const decoder = new TextDecoder();
             const text = decoder.decode(value);
