@@ -1,4 +1,4 @@
-import { logger } from "./logger";
+import { logger } from "./utils";
 
 /**
  * Makes an HTTP request to the specified URL with the given options.
