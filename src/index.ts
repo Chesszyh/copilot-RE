@@ -388,15 +388,24 @@ class CopilotRE {
         threadID?: string,
         sinkStream?: Writable, // Node JS stream
         reference?: RepositoryDetail,    // Reference to repo i:e getRepoDetail()
-
+        githubCookie?: string,
+        authToken?: string,
     }): Promise<Result<string>> {
         let {
             prompt,
             model,
             threadID,
             sinkStream,
-            reference
+            reference,
+            githubCookie,
+            authToken,
         } = params;
+
+        if (authToken)
+            this.authToken = authToken;
+
+        if (githubCookie)
+            this.githubCookie = githubCookie;
 
         if (!threadID) {
             const newThread = await this.createThread();
