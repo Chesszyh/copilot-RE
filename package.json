@@ -3,6 +3,10 @@
   "module": "src/index.ts",
   "type": "module",
   "private": true,
+  "scripts": {
+    "bun-copilot": "bun ./src/cli.ts",
+    "node-copilot": "node ./src/cli.ts"
+  },
   "devDependencies": {
     "@types/bun": "latest"
   },
