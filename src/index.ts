@@ -1,43 +1,54 @@
-import { AGENTS_URL, APIHEADERS, COPILOT_TOKEN_URL, FUNCTIONS, GRAPHQL_URL, MODELS_URL, REPO_URL, THREADS_URL, WEBHEADERS } from "./utils/constants";
+import { Writable } from "stream";
+import { logger } from "./utils/logger";
 import { request } from "./utils/networkUtils";
-import tty from "tty";
+import { AGENTS_URL, APIHEADERS, COPILOT_TOKEN_URL, FUNCTIONS, GRAPHQL_URL, MODELS_URL, REPO_URL, THREADS_URL, WEBHEADERS } from "./utils/constants";
+
+
+// Spreading header leads to data loss so first convert it
+// to {key: value} pair and then spread it
+const webHeadersObject: { [key: string]: string; } = {};
+const apiHeadersObject: { [key: string]: string } = {};
+
+WEBHEADERS.forEach((value, key) => {
+    webHeadersObject[key] = value;
+});
+APIHEADERS.forEach((value, key) => {
+    apiHeadersObject[key] = value;
+});
 
 class CopilotRE {
     private authToken?: string;
     private githubCookie: string;
 
     /**
-    * Creates an instance to interact with different AI models.
-    * To get your cookie please go through the CopilotRE's `README.md`
-    *
-    * @param {string} githubCookie - Cookie of your github account
-    * @param {string} authToken - Token to interact with AI models
-    */
-    constructor(githubCookie: string, authToken?: string) {
+     * Creates an instance of the class.
+     * @param {Object} params - The configuration parameters
+     * @param {string} [params.githubCookie] - The GitHub cookie string for authentication
+     * @param {string} [params.authToken] - Optional authentication token
+     */
+    constructor({ githubCookie, authToken }: { githubCookie: string, authToken?: string }) {
         this.githubCookie = githubCookie;
         this.authToken = authToken;
+
+        if (githubCookie)
+            logger("Github Cookie", githubCookie);
+
+        if (authToken)
+            logger("Authentication Token", authToken);
     }
 
     /**
-     * Get authentication token that is used to interact with AI models
-     *
-     * @param {string} cookie - Cookie of your github account
-     * @returns {Promise<Result<string | Response>>} - Result representing auth token
+     * Generates authentication token that is used to interact with AI models
+     * and maintains it internally
      */
-    async getAuthToken(cookie = this.githubCookie): Promise<Result<string | Response>> {
-        if (!cookie || cookie.length < 10)
-            return {
-                status: "error",
-                error: Error("Invalid github cookie provided."),
-            }
-
+    async generateAuthToken() {
         // Make a request to token grabber url
         const response = await request(COPILOT_TOKEN_URL, {
-            body: null,             // Yep, null body
+            body: null,
             method: "POST",
             headers: new Headers({
-                ...WEBHEADERS,
-                'Authentication': 'Github Bearer ' + cookie,
+                ...webHeadersObject,
+                'Cookie': this.githubCookie,
             })
         });
 
@@ -49,19 +60,21 @@ class CopilotRE {
             const parsedResponse = await response.body.json();
 
             // If no authToken in JSON body
-            if (!parsedResponse?.authToken)
+            if (!parsedResponse?.token)
                 return {
                     status: "error",
                     body: response.body,    // Just in-case
                     error: Error("Failed to obtain authentication token"),
                 }
 
+            // Be careful here its .token for response 
+            // and .authToken for internal representation
+            this.authToken = String(parsedResponse.token);
 
-            this.authToken = parsedResponse.authToken;
-
+            logger("Authentication Token", this.authToken);
             return {
                 status: "success",
-                body: parsedResponse.authToken,
+                body: this.authToken,
             };
         } catch (error) {
             // In-case of any other failures
@@ -75,22 +88,15 @@ class CopilotRE {
     /**
     * Get list of all available AI models
     *
-    * @param {string} authToken - Authentication token used to interact with AI models
     * @returns {Promise<Result<ModelsResponse>>} - Result representing AI models
     */
-    async getModels(authToken = this.authToken): Promise<Result<ModelsResponse>> {
-        if (!authToken)
-            return {
-                status: "error",
-                error: Error("No authentication token provided")
-            }
-
+    async getModels(): Promise<Result<ModelsResponse>> {
         // Fetch models
         const response = await request(MODELS_URL, {
             method: "GET",
             headers: new Headers({
-                ...APIHEADERS,
-                "Authorization": "Github Bearer " + authToken,
+                ...apiHeadersObject,
+                "Authorization": "GitHub-Bearer " + this.authToken,
             }),
         });
 
@@ -121,22 +127,15 @@ class CopilotRE {
     /**
      * Get all conversation history
      *
-     * @param {string} authToken - Authentication token to interact with API
-     * @returns {Promise<Result<ThreadResponse>>} - Result representing conversation history
+     * @returns {Promise<Result<ThreadResponse>>} - Result representing all conversation history / threads
     */
-    async getConversationHistory(authToken = this.authToken): Promise<Result<ThreadResponse>> {
-        if (!authToken)
-            return {
-                status: "error",
-                error: Error("Authentication token is missing, can't fetch conversations"),
-            }
-
+    async getAllThreads(): Promise<Result<ThreadResponse>> {
         // Request for conversations
         const response = await request(THREADS_URL, {
             method: "GET",
             headers: new Headers({
-                ...WEBHEADERS,
-                "Authorization": "Github Bearer " + authToken,
+                ...webHeadersObject,
+                "Authorization": "GitHub-Bearer " + this.authToken,
             }),
         });
 
@@ -166,25 +165,17 @@ class CopilotRE {
     /**
      * Get each conversation/thread message
      *
-     * @param {string} authToken - Authentication token to interact with API
      * @returns {Promise<Result<ThreadContent>>} - Result representing thread content
      */
-    async getThreadContent(authToken = this.authToken, threadID: string): Promise<Result<ThreadContent>> {
-        if (!authToken) {
-            return {
-                status: "error",
-                error: Error("Authentication token missing, can't fetch thread content"),
-            }
-        }
-
+    async getThreadContent(threadID: string): Promise<Result<ThreadContent>> {
         // Make request for thread content
         const response = await request(
             `${THREADS_URL}/${threadID}/messages`,
             {
                 method: "GET",
                 headers: new Headers({
-                    ...WEBHEADERS,
-                    "Authorization": "Github Bearer " + authToken,
+                    ...webHeadersObject,
+                    "Authorization": "GitHub-Bearer " + this.authToken,
                 }),
             }
         );
@@ -197,7 +188,10 @@ class CopilotRE {
 
         try {
             const parsedResponse = await response.body.json();
-            return parsedResponse;
+            return {
+                status: "success",
+                body: parsedResponse,
+            };
         } catch (error) {
             return {
                 status: "error",
@@ -209,24 +203,17 @@ class CopilotRE {
     /**
      * Creates a new thread to start a new conversation.
      *
-     * @param {string} authToken - Authentication token to interact with API
      * @returns {Promise<Result<Thread>>} - New thread details
      */
-    async createThread(authToken = this.authToken): Promise<Result<NewThread>> {
-        if (!authToken)
-            return {
-                status: "error",
-                error: Error("Authentication token missing, cant create new thread"),
-            }
-
+    async createThread(): Promise<Result<NewThread>> {
         // Request to create new thread
         const response = await request(THREADS_URL, {
-            body: null,         // Yes, thats a null body
             method: "POST",
             headers: new Headers({
-                ...WEBHEADERS,
-                "Authorization": "Github Bearer " + authToken,
+                ...apiHeadersObject,
+                "Authorization": "GitHub-Bearer " + this.authToken,
             }),
+            body: JSON.stringify({ "custom_copilot_id": null }),
         });
 
         // Check for errors
@@ -258,27 +245,19 @@ class CopilotRE {
      * NOTE: Some models don't support extensions, you can know about that
      * through getModels() method
      * 
-     * @param {string} authToken - Authentication token to interact with API
      * @returns {Promise<Result<Extension[]>>} - Result representing installed extensions
      */
-    async getExtensions(authToken = this.authToken): Promise<Result<Extension[]>> {
+    async getExtensions(): Promise<Result<Extension[]>> {
         /**
-         * TODO: Should I internally maintail supported extensions for a choosen model?
+         * TODO: Should I internally maintain supported extensions for a choosen model?
          * Lets see where this goes.
          */
-
-        if (!authToken)
-            return {
-                status: "error",
-                error: Error("Authentication token missing, can't fetch extensions"),
-            }
-
         // Request for extensions
         const response = await request(AGENTS_URL, {
             method: "GET",
             headers: new Headers({
-                ...APIHEADERS,
-                "Authorization": "Github Bearer " + authToken
+                ...apiHeadersObject,
+                "Authorization": "GitHub-Bearer " + this.authToken,
             }),
         });
 
@@ -309,7 +288,7 @@ class CopilotRE {
      * Search for public unarchived github repositories
      * @param {string} keyword - Name of reqpository in format: 'username/repo-name'
      */
-    async getRepoList(keyword: string, authToken = this.authToken): Promise<Result<RepositorySearch>> {
+    async getRepoList(keyword: string): Promise<Result<RepositorySearch>> {
         // Split to organization/user and repo name
         let newKeyword = keyword.split("/");
 
@@ -335,8 +314,8 @@ class CopilotRE {
         const response = await request(`${GRAPHQL_URL}${query}`, {
             method: "GET",
             headers: new Headers({
-                ...APIHEADERS,
-                "Authorization": "Github Bearer " + authToken,
+                ...webHeadersObject,
+                "Cookie": this.githubCookie,
             }),
         });
 
@@ -365,23 +344,16 @@ class CopilotRE {
     /**
      * Get details of a specific repository
      * 
-     * @param {string} repoID - ID of the repository
-     * @param {string} authToken - Authentication token to interact with API
+     * @param {number} databaseId - Database ID of the repository
      * @returns {Promise<Result<RepositoryDetail>>} - Result representing repository details
      */
-    async getRepoDetail(repoID: string, authToken = this.authToken): Promise<Result<RepositoryDetail>> {
-        if (!authToken)
-            return {
-                status: "error",
-                error: Error("Authentication token missing, can't fetch repository details"),
-            }
-
+    async getRepoDetail(databaseId: number): Promise<Result<RepositoryDetail>> {
         // Make request for repository details
-        const response = await request(`${REPO_URL}/${repoID}`, {
+        const response = await request(`${REPO_URL}/${databaseId}`, {
             method: "GET",
             headers: new Headers({
-                ...APIHEADERS,
-                "Authorization": "Github Bearer " + authToken,
+                ...webHeadersObject,
+                "Cookie": this.githubCookie,
             }),
         });
 
@@ -409,33 +381,25 @@ class CopilotRE {
 
     /**
      * Generate content using a specific model
-     * 
-     * @param {string} prompt Prompt for the model
-     * @param {string} model Name of model to use to generate content
-     * @param {string} threadID UUID representing the specific thread / conversation
-     * @param {WritableStream} sinkStream Stream to write the generated content
-     * @param {object} reference Reference repository obtained from `repoDetail()`
      */
-    async generateContent(
+    async generateContent(params: {
         prompt: string,
         model: string,
         threadID?: string,
-        apiKey = this.authToken,
-        // NodeJS version of write stream
-        sinkStream?: NodeJS.WriteStream,
-        reference?: RepositoryDetail,
-    ): Promise<Result<string>> {
+        sinkStream?: Writable, // Node JS stream
+        reference?: RepositoryDetail,    // Reference to repo i:e getRepoDetail()
 
-        if (!apiKey) {
-            return {
-                status: "error",
-                error: Error("Authentication token missing, can't generate content"),
-            }
-        }
+    }): Promise<Result<string>> {
+        let {
+            prompt,
+            model,
+            threadID,
+            sinkStream,
+            reference
+        } = params;
 
-        // Generate a new thread if not provided
         if (!threadID) {
-            const newThread = await this.createThread(apiKey);
+            const newThread = await this.createThread();
             if (newThread.status != "success" || !newThread.body)
                 return {
                     status: "error",
@@ -449,20 +413,23 @@ class CopilotRE {
         const response = await fetch(`${THREADS_URL}/${threadID}/messages`, {
             method: "POST",
             headers: {
-                ...WEBHEADERS,
-                "Authorization": "Github Bearer " + apiKey,
+                ...apiHeadersObject,
+                "Authorization": "GitHub-Bearer " + this.authToken,
             },
             body: JSON.stringify({
+                confirmations: [],
                 content: prompt,
-                intent: "conversation",
-                references: reference ? [reference] : [],
                 context: [],
                 currentURL: "https://github.com/copilot/c/" + threadID,
-                streaming: true,
-                confirmations: [],
+                references: reference ? [{ ...reference, "type": "repository" }] : [],
+                customCopilotID: null,
                 customInstructions: [],
-                model: model,
+                intent: "conversation",
+                mediaContent: [],
                 mode: "immersive",
+                model: model,
+                streaming: true,
+                tools: [],
             }),
         });
 
@@ -512,14 +479,13 @@ class CopilotRE {
                     if (sinkStream) {
                         sinkStream.write(currentValue.body);
                     }
+
                     return accumulator + currentValue.body;
                 } else {
-                    // TODO: Implement smth here
-
                     if (sinkStream) {
                         const status = FUNCTIONS.find((item) => item.id === currentValue.type);
                         // If stream is TTY i:e terminal then write the status
-                        if (sinkStream.isTTY && status?.id) {
+                        if ("isTTY" in sinkStream && status?.id) {
                             // Use greyish color to print status
                             sinkStream.write(`\n\x1b[90m[${status.status}]\n`);
                         }
