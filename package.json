@@ -1,13 +1,12 @@
 {
   "name": "copilot-re",
-  "version": "1.0.0",
-  "description": "",
-  "main": "src/CopilotRE.js",
+  "module": "src/index.ts",
   "type": "module",
-  "scripts": {
-    "dev": ""
+  "private": true,
+  "devDependencies": {
+    "@types/bun": "latest"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC"
+  "peerDependencies": {
+    "typescript": "^5"
+  }
 }
