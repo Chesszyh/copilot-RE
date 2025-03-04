@@ -1,6 +1,6 @@
 interface RequestOptions {
-    method?: "GET" | "POST"; // these methods are sufficient
-    body?: string | null;    // string is sufficient
+    method?: "GET" | "POST";
+    body?: string | null;
     headers?: Headers;
 }
 
@@ -84,14 +84,14 @@ interface NewThread {
     thread: Thread;
 }
 
-interface RepoLanguage {
-    name: string;
-    percent: number;
-}
-
 interface RefInfo {
     name: string;
     type: string;
+}
+
+interface Language {
+    name: string;
+    percent: number;
 }
 
 interface RepositoryReference {
@@ -106,7 +106,7 @@ interface RepositoryReference {
     ref: string;
     refInfo: RefInfo;
     visibility: string;
-    languages: RepoLanguage[];
+    languages: Language[];
 }
 
 interface FileReference {
@@ -243,16 +243,6 @@ interface Viewer {
     id: string;
 }
 
-interface RepositorySearch {
-    data: {
-        viewer: Viewer;
-    };
-}
-
-interface Language {
-    name: string;
-    percent: number;
-}
 
 interface RepositoryDetail {
     id: number;
@@ -267,4 +257,44 @@ interface RepositoryDetail {
     visibility: "public";
     languages: Language[];
     customInstructions: string | null;
+}
+
+interface RepositoryNode {
+    __typename: "Repository";
+    id: string;
+    databaseId: number;
+    name: string;
+    nameWithOwner: string;
+    owner: User;
+    isPrivate: boolean;
+    visibility: string;
+    isArchived: boolean;
+    isInOrganization: boolean;
+    hasIssuesEnabled: boolean;
+    slashCommandsEnabled: boolean;
+    viewerCanPush: boolean;
+    viewerIssueCreationPermissions: ViewerIssueCreationPermissions;
+    securityPolicyUrl: string | null;
+    contributingFileUrl: string | null;
+    codeOfConductFileUrl: string | null;
+    shortDescriptionHTML: string;
+    planFeatures: PlanFeatures;
+    __isNode: "Repository";
+}
+
+interface PageInfo {
+    hasNextPage: boolean;
+    endCursor: string;
+}
+
+interface SearchData {
+    repositoryCount: number;
+    pageInfo: PageInfo;
+    nodes: RepositoryNode[];
+}
+
+interface RepositorySearch {
+    data: {
+        search: SearchData;
+    };
 }
