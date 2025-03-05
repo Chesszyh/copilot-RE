@@ -27,6 +27,11 @@ class CopilotRE {
      * @param {string} [params.authToken] - Optional authentication token
      */
     constructor({ githubCookie, authToken }: { githubCookie: string, authToken?: string }) {
+        // If user has pasted the whole cookie then the cookie token will contain
+        // user_session so no need to append this
+        if (!githubCookie.includes("user_session"))
+            githubCookie = `user_session=${githubCookie}`;
+
         this.githubCookie = githubCookie;
         this.authToken = authToken;
 
@@ -404,8 +409,14 @@ class CopilotRE {
         if (authToken)
             this.authToken = authToken;
 
-        if (githubCookie)
+        if (githubCookie) {
+            // If user has pasted the whole cookie then the cookie token will contain
+            // user_session so no need to append this
+            if (!githubCookie.includes("user_session"))
+                githubCookie = `user_session=${githubCookie}`;
+
             this.githubCookie = githubCookie;
+        }
 
         if (!threadID) {
             const newThread = await this.createThread();
