@@ -26,13 +26,13 @@ const request = async (requestURL: string, options?: RequestOptions): Promise<Re
             headers: options.headers || {},
         });
 
-        if (!response.ok)
+        if (!response.ok) {
             return {
                 status: "error",
                 body: response, // Attach body just in case
                 error: new Error(response.statusText),
             };
-
+        }
         return {
             status: "success",
             body: response,
