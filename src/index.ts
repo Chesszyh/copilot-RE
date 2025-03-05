@@ -485,7 +485,7 @@ class CopilotRE {
             const decoder = new TextDecoder();
             const text = decoder.decode(value);
             const lines = text.trim().split("data: ");
-            const buffer: Array<{ type: string, body: string }> = [];
+            const buffer: Array<{ type: string, body: string, name?: string }> = [];
 
             // Parse each line as seperate JSON
             lines.forEach((item: string) => {
@@ -510,11 +510,12 @@ class CopilotRE {
                     return accumulator + currentValue.body;
                 } else {
                     if (sinkStream) {
-                        const status = FUNCTIONS.find((item) => item.id === currentValue.type);
+                        // Check type of function call
+                        const status = FUNCTIONS.find((item) => item.id === currentValue.name);
                         // If stream is TTY i:e terminal then write the status
                         if ("isTTY" in sinkStream && status?.id) {
-                            // Use greyish color to print status
-                            sinkStream.write(`\n\x1b[90m[${status.status}]\n`);
+                            // Prints what function calls are being made by model
+                            sinkStream.write(`\n\x1b[1;90m[${status.status.trim()}]\n\x1b[0m`);
                         }
                     }
                 }
