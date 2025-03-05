@@ -1,16 +1,14 @@
+import fs from "fs";
 import CopilotRE from ".";
 import { getCookie, saveCookie, toggleLogs, prompt } from "./utils/utils";
 
 toggleLogs();
 
-// Default AI model
-const DEFAULT_MODEL = "gpt-4o";
-
 let cookie = getCookie("cookie") || "";
 let threadID = getCookie("threadID") || "";
 
 if (!cookie) {
-    cookie = await prompt("[?] Your github cookie: ");
+    cookie = await prompt("[?] Your '\x1b[90musers_session\x1b[0m' value from cookies: ");
     cookie = cookie.trim();
 
     if (!cookie) {
@@ -19,6 +17,7 @@ if (!cookie) {
     }
 
     saveCookie("cookie", cookie);
+    console.log("[+] Your cookies are stored in .cookie file for later use")
 }
 
 // Init CopilotRE
@@ -45,20 +44,65 @@ if (!threadID) {
     saveCookie("threadID", newThread.body.thread_id);
     threadID = newThread.body.thread_id;
 }
+console.log("[+] Supported commands: $models, $exit, $reset, $setmodel, $currentmodel");
+
+let modelID = getCookie("modelId") || "gpt-4o";
 
 while (true) {
     const userPrompt = await prompt("\x1b[1;35mYou\x1b[0m: \x1b[1;32m");
-
+    // End user message color
     process.stdout.write("\x1b[0m");
+
+    if (userPrompt.toLowerCase() === "$models") {
+        const models = await copilot.getModels();
+        if (models.status != "success" || !models.body) {
+            console.error("[!] Failed to get models");
+            process.exit(1);
+        }
+
+        console.log(" -- Available Models --");
+
+        models.body?.data.map((model) => {
+            const modelName = model.name;
+            const modelId = model.id;
+            // Beautifully print the id: name format
+
+            console.log(`\x1b[1;34m${modelId}\x1b[0m: ${modelName}`);
+        });
+        continue;
+    } else if (userPrompt.toLowerCase() === "$exit") {
+        console.log("Goodbye!");
+        process.exit(0);
+    } else if (userPrompt.toLowerCase() === "$reset") {
+        if (fs.existsSync(".cookie")) {
+            fs.unlinkSync(".cookie");
+            console.log("[+] Cookies removed");
+            process.exit(0);
+        }
+    } else if (userPrompt.toLowerCase() === "$setmodel") {
+        const typedModelID = await prompt("Enter model id: ");
+        if (typedModelID) {
+            modelID = typedModelID;
+            saveCookie("modelId", modelID);
+            console.log(`[+] Model set to ${modelID}`);
+        } else {
+            console.error("[!] Invalid model id, keeping: " + modelID);
+        }
+        continue;
+    } else if (userPrompt.toLowerCase() === "$currentmodel") {
+        console.log(`[+] Current model: ${modelID}`);
+        continue;
+    }
 
     const response = await copilot.generateContent({
         threadID,
-        model: DEFAULT_MODEL,
+        model: modelID,
         prompt: userPrompt,
         sinkStream: process.stdout,
     });
 
+    
     if (response.status != "success" && response.error) {
-        console.error(response.error?.message);
+        console.log(response)
     }
 }
