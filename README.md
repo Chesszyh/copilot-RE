@@ -13,14 +13,17 @@ cd copilot-RE
 ```
 
 ## 🍪 How to get cookie?
-- Press `Ctrl + Shift + J`
-- Goto `Network` tab
-- Press `Ctrl + R` to reload the page
-- Scroll to top in request history
-- You will see `github.com` at top (if `Preserve Log` is not enabled)
-- Click on it
-- Click on the request header drop down
-- Copy all the content of `Cookie`
+> [!CAUTION]
+> Cookies are critical part of your account. Sharing them will result to bad actors accessing your account. Keep this in mind while you needle with cookies.
+- Open [github.com](https://github.com) (You are likely already here)
+- Right click on the page and click on `Inspect`
+- Now you might see
+    - A `Storage` tab on Firefox
+    - An `Application` tab on Google-Chrome
+- Go to it and click on `Cookies`
+- You might a cookie item with `user_session`
+- Copy its corresponding value and you have it.
+
 # 🤝 Supported Models:
 As of now it supports the following models, please see `model_limitations` for appropriate use.
 
