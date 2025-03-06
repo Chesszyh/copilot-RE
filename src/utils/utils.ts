@@ -80,3 +80,33 @@ export const getCookie = (key: string): string | undefined => {
 export const toggleLogs = () => {
     logDisabled = !logDisabled;
 }
+
+/**
+ * Creates a centered string with terminal border and color
+ * @param {string} str - The string to center in the terminal
+ * @param {string} textColor - ANSI color code for the text (default: white)
+ * @returns {string} - Formatted string with colored border
+ */
+export const createTerminalBorder = (str: string, textColor = '\x1b[37m') => {
+    const BOLD_LIGHT_BLUE = '\x1b[1;94m';
+    const RESET = '\x1b[0m';
+
+
+    // Terminal width
+    const termWidth = process.stdout.columns || 80;
+
+    const stringPortion = `┤ ${str} ├`;
+    const stringWidth = stringPortion.length;
+
+    const availableDashSpace = termWidth - 2 - stringWidth;
+
+    const dashesBeforeString = Math.floor(availableDashSpace / 2);
+    const dashesAfterString = availableDashSpace - dashesBeforeString;
+
+    const border = BOLD_LIGHT_BLUE + '┌' + '─'.repeat(dashesBeforeString) +
+        RESET + textColor + stringPortion +
+        RESET + BOLD_LIGHT_BLUE + '─'.repeat(dashesAfterString) + '┐' +
+        RESET;
+
+    return border;
+}
