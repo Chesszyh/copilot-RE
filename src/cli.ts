@@ -1,6 +1,6 @@
 import fs from "fs";
 import CopilotRE from ".";
-import { getCookie, saveCookie, toggleLogs, prompt } from "./utils/utils";
+import { getCookie, saveCookie, toggleLogs, prompt, createTerminalBorder } from "./utils/utils";
 
 toggleLogs();
 
@@ -49,7 +49,10 @@ console.log("[+] Supported commands: $models, $exit, $reset, $setmodel, $current
 let modelID = getCookie("modelId") || "gpt-4o";
 
 while (true) {
-    const userPrompt = await prompt("\x1b[1;35mYou\x1b[0m: \x1b[1;32m");
+    console.log(createTerminalBorder("You"), "\x1b[0;35m")
+
+    const userPrompt = await prompt("\x1b[1;36m>\x1b[0m \x1b[1;32m");
+
     // End user message color
     process.stdout.write("\x1b[0m");
 
@@ -60,15 +63,20 @@ while (true) {
             process.exit(1);
         }
 
-        console.log(" -- Available Models --");
+        console.log(createTerminalBorder("Available Models", "\x1b[1;45m"));
 
-        models.body?.data.map((model) => {
+        // Store in array of objects to beautifully display using console.table
+        let availableModels: { model_id: string, model_name: string }[] = [];
+
+        availableModels = models.body?.data.map((model) => {
             const modelName = model.name;
             const modelId = model.id;
-            // Beautifully print the id: name format
 
-            console.log(`\x1b[1;34m${modelId}\x1b[0m: ${modelName}`);
+            return { model_id: modelId, model_name: modelName };
         });
+
+        // Log the table
+        console.table(availableModels);
         continue;
     } else if (userPrompt.toLowerCase() === "$exit") {
         console.log("Goodbye!");
@@ -101,8 +109,9 @@ while (true) {
         sinkStream: process.stdout,
     });
 
-    
     if (response.status != "success" && response.error) {
         console.log(response)
+    } else {
+        process.stdout.write("\n\n");
     }
 }
