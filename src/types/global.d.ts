@@ -1,5 +1,5 @@
 interface RequestOptions {
-    method?: "GET" | "POST";
+    method?: "GET" | "POST" | "DELETE";
     body?: string | null;
     headers?: Headers;
 }

@@ -396,6 +396,35 @@ class CopilotRE {
     }
 
     /**
+     * Delete a thread/conversation
+     */
+    async deleteThread(threadID: string) {
+        const response = await request(
+            "https://api.individual.githubcopilot.com/github/chat/threads/" +
+                threadID,
+            {
+                method: "DELETE",
+                headers: new Headers({
+                    ...webHeadersObject,
+                    Authorization: "GitHub-Bearer " + this.authToken,
+                }),
+            },
+        );
+
+        if (response.status == "success") {
+            return {
+                status: "success",
+                body: "",
+            };
+        } else {
+            return {
+                status: "error",
+                error: response.error,
+            };
+        }
+    }
+
+    /**
      * Generate content using a specific model
      */
     async generateContent(params: {
