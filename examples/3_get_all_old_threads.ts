@@ -21,8 +21,7 @@ if (threads.status == "success" && threads.body) {
 
     // Traverse through threads
     data.forEach((thread) => {
-        if (!thread.name)
-            thread.name = "New Conversation";
+        if (!thread.name) thread.name = "New Conversation";
 
         console.log(thread.name + " - " + thread.id);
     });

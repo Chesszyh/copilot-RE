@@ -1,6 +1,12 @@
 import fs from "fs";
 import CopilotRE from ".";
-import { getCookie, saveCookie, toggleLogs, prompt, createTerminalBorder } from "./utils/utils";
+import {
+    getCookie,
+    saveCookie,
+    toggleLogs,
+    prompt,
+    createTerminalBorder,
+} from "./utils/utils";
 
 toggleLogs();
 
@@ -8,7 +14,9 @@ let cookie = getCookie("cookie") || "";
 let threadID = getCookie("threadID") || "";
 
 if (!cookie) {
-    cookie = await prompt("[?] Your '\x1b[90musers_session\x1b[0m' value from cookies: ");
+    cookie = await prompt(
+        "[?] Your '\x1b[90musers_session\x1b[0m' value from cookies: ",
+    );
     cookie = cookie.trim();
 
     if (!cookie) {
@@ -17,7 +25,7 @@ if (!cookie) {
     }
 
     saveCookie("cookie", cookie);
-    console.log("[+] Your cookies are stored in .cookie file for later use")
+    console.log("[+] Your cookies are stored in .cookie file for later use");
 }
 
 // Init CopilotRE
@@ -28,7 +36,7 @@ const copilot = new CopilotRE({
 // Populate auth token internally
 const token = await copilot.generateAuthToken();
 if (token.status != "success") {
-    console.log(token)
+    console.log(token);
     console.error("[!] Failed to generate auth token");
     process.exit(1);
 }
@@ -44,12 +52,14 @@ if (!threadID) {
     saveCookie("threadID", newThread.body.thread_id);
     threadID = newThread.body.thread_id;
 }
-console.log("[+] Supported commands: $models, $exit, $reset, $setmodel, $currentmodel");
+console.log(
+    "[+] Supported commands: $models, $exit, $reset, $setmodel, $currentmodel",
+);
 
 let modelID = getCookie("modelId") || "gpt-4o";
 
 while (true) {
-    console.log(createTerminalBorder("You"), "\x1b[0;35m")
+    console.log(createTerminalBorder("You"), "\x1b[0;35m");
 
     const userPrompt = await prompt("\x1b[1;36m>\x1b[0m \x1b[1;32m");
 
@@ -66,7 +76,7 @@ while (true) {
         console.log(createTerminalBorder("Available Models", "\x1b[1;45m"));
 
         // Store in array of objects to beautifully display using console.table
-        let availableModels: { model_id: string, model_name: string }[] = [];
+        let availableModels: { model_id: string; model_name: string }[] = [];
 
         availableModels = models.body?.data.map((model) => {
             const modelName = model.name;
@@ -110,7 +120,7 @@ while (true) {
     });
 
     if (response.status != "success" && response.error) {
-        console.log(response)
+        console.log(response);
     } else {
         process.stdout.write("\n\n");
     }

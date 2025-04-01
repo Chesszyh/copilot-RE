@@ -1,7 +1,7 @@
 import fs from "fs";
 import readLine from "readline";
 
-type LogLevel = 'info' | 'error' | 'warn' | 'debug';
+type LogLevel = "info" | "error" | "warn" | "debug";
 
 const rl = readLine.createInterface({
     input: process.stdin,
@@ -12,30 +12,29 @@ let logDisabled = false;
 
 /**
  * Logs a message to the console.
- * 
+ *
  * @param key The key of the message
  * @param value The value of the message
  * @param level The log level of the message (info, error, warn, debug)
- * 
+ *
  * @example logger("message", "Hello, World!", "info");
  */
-export const logger = (key: string, value: any, level: LogLevel = 'info') => {
-    if (logDisabled)
-        return
+export const logger = (key: string, value: any, level: LogLevel = "info") => {
+    if (logDisabled) return;
 
-    const timestamp = new Date().toLocaleTimeString('en-US', {
+    const timestamp = new Date().toLocaleTimeString("en-US", {
         hour12: false,
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit'
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
     });
 
     const colors = {
-        info: '\x1b[1;32m',    // Green
-        error: '\x1b[1;31m',   // Red
-        warn: '\x1b[1;33m',    // Yellow
-        debug: '\x1b[1;34m',   // Blue
-        reset: '\x1b[0m'     // Reset
+        info: "\x1b[1;32m", // Green
+        error: "\x1b[1;31m", // Red
+        warn: "\x1b[1;33m", // Yellow
+        debug: "\x1b[1;34m", // Blue
+        reset: "\x1b[0m", // Reset
     };
 
     // Trim longer strings
@@ -43,7 +42,7 @@ export const logger = (key: string, value: any, level: LogLevel = 'info') => {
         value = value.slice(0, 65 - key.length) + "...";
 
     console.log(
-        `[\x1b[1;36m${timestamp}\x1b[0m] \x1b[1;35m${key}\x1b[0m: ${colors[level]}${value}${colors.reset}`
+        `[\x1b[1;36m${timestamp}\x1b[0m] \x1b[1;35m${key}\x1b[0m: ${colors[level]}${value}${colors.reset}`,
     );
 };
 
@@ -54,7 +53,7 @@ export const prompt = (question: string): Promise<string> => {
             resolve(answer);
         });
     });
-}
+};
 
 export const saveCookie = (key: string, value: string) => {
     let cookieContent = "{}";
@@ -67,7 +66,7 @@ export const saveCookie = (key: string, value: string) => {
     cookieJSON[key] = value;
 
     fs.writeFileSync(".cookie", JSON.stringify(cookieJSON));
-}
+};
 
 export const getCookie = (key: string): string | undefined => {
     if (!fs.existsSync(".cookie")) {
@@ -75,11 +74,11 @@ export const getCookie = (key: string): string | undefined => {
     }
 
     return JSON.parse(fs.readFileSync(".cookie", "utf-8"))[key];
-}
+};
 
 export const toggleLogs = () => {
     logDisabled = !logDisabled;
-}
+};
 
 /**
  * Creates a centered string with terminal border and color
@@ -87,10 +86,9 @@ export const toggleLogs = () => {
  * @param {string} textColor - ANSI color code for the text (default: white)
  * @returns {string} - Formatted string with colored border
  */
-export const createTerminalBorder = (str: string, textColor = '\x1b[37m') => {
-    const BOLD_LIGHT_BLUE = '\x1b[1;94m';
-    const RESET = '\x1b[0m';
-
+export const createTerminalBorder = (str: string, textColor = "\x1b[37m") => {
+    const BOLD_LIGHT_BLUE = "\x1b[1;94m";
+    const RESET = "\x1b[0m";
 
     // Terminal width
     const termWidth = process.stdout.columns || 80;
@@ -103,10 +101,18 @@ export const createTerminalBorder = (str: string, textColor = '\x1b[37m') => {
     const dashesBeforeString = Math.floor(availableDashSpace / 2);
     const dashesAfterString = availableDashSpace - dashesBeforeString;
 
-    const border = BOLD_LIGHT_BLUE + '┌' + '─'.repeat(dashesBeforeString) +
-        RESET + textColor + stringPortion +
-        RESET + BOLD_LIGHT_BLUE + '─'.repeat(dashesAfterString) + '┐' +
+    const border =
+        BOLD_LIGHT_BLUE +
+        "┌" +
+        "─".repeat(dashesBeforeString) +
+        RESET +
+        textColor +
+        stringPortion +
+        RESET +
+        BOLD_LIGHT_BLUE +
+        "─".repeat(dashesAfterString) +
+        "┐" +
         RESET;
 
     return border;
-}
+};

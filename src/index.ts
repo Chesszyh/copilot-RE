@@ -1,12 +1,21 @@
 import { Writable } from "stream";
 import { logger } from "./utils/utils";
 import { request } from "./utils/networkUtils";
-import { AGENTS_URL, APIHEADERS, COPILOT_TOKEN_URL, FUNCTIONS, GRAPHQL_URL, MODELS_URL, REPO_URL, THREADS_URL, WEBHEADERS } from "./utils/constants";
-
+import {
+    AGENTS_URL,
+    APIHEADERS,
+    COPILOT_TOKEN_URL,
+    FUNCTIONS,
+    GRAPHQL_URL,
+    MODELS_URL,
+    REPO_URL,
+    THREADS_URL,
+    WEBHEADERS,
+} from "./utils/constants";
 
 // Spreading header leads to data loss so first convert it
 // to {key: value} pair and then spread it
-const webHeadersObject: { [key: string]: string; } = {};
+const webHeadersObject: { [key: string]: string } = {};
 const apiHeadersObject: { [key: string]: string } = {};
 
 WEBHEADERS.forEach((value, key) => {
@@ -26,7 +35,13 @@ class CopilotRE {
      * @param {string} [params.githubCookie] - The GitHub cookie string for authentication
      * @param {string} [params.authToken] - Optional authentication token
      */
-    constructor({ githubCookie, authToken }: { githubCookie: string, authToken?: string }) {
+    constructor({
+        githubCookie,
+        authToken,
+    }: {
+        githubCookie: string;
+        authToken?: string;
+    }) {
         // If user has pasted the whole cookie then the cookie token will contain
         // user_session so no need to append this
         if (!githubCookie.includes("user_session"))
@@ -35,11 +50,9 @@ class CopilotRE {
         this.githubCookie = githubCookie;
         this.authToken = authToken;
 
-        if (githubCookie)
-            logger("Github Cookie", githubCookie);
+        if (githubCookie) logger("Github Cookie", githubCookie);
 
-        if (authToken)
-            logger("Authentication Token", authToken);
+        if (authToken) logger("Authentication Token", authToken);
     }
 
     /**
@@ -53,12 +66,11 @@ class CopilotRE {
             method: "POST",
             headers: new Headers({
                 ...webHeadersObject,
-                'Cookie': this.githubCookie,
-            })
+                Cookie: this.githubCookie,
+            }),
         });
 
-        if (response.status != "success" || !response.body)
-            return response;
+        if (response.status != "success" || !response.body) return response;
 
         try {
             // Parse the response to JSON
@@ -68,11 +80,11 @@ class CopilotRE {
             if (!parsedResponse?.token)
                 return {
                     status: "error",
-                    body: response.body,    // Just in-case
+                    body: response.body, // Just in-case
                     error: Error("Failed to obtain authentication token"),
-                }
+                };
 
-            // Be careful here its .token for response 
+            // Be careful here its .token for response
             // and .authToken for internal representation
             this.authToken = String(parsedResponse.token);
 
@@ -85,23 +97,26 @@ class CopilotRE {
             // In-case of any other failures
             return {
                 status: "error",
-                error: (error instanceof Error) ? error : Error("Unknown error occured"),
-            }
+                error:
+                    error instanceof Error
+                        ? error
+                        : Error("Unknown error occured"),
+            };
         }
     }
 
     /**
-    * Get list of all available AI models
-    *
-    * @returns {Promise<Result<ModelsResponse>>} - Result representing AI models
-    */
+     * Get list of all available AI models
+     *
+     * @returns {Promise<Result<ModelsResponse>>} - Result representing AI models
+     */
     async getModels(): Promise<Result<ModelsResponse>> {
         // Fetch models
         const response = await request(MODELS_URL, {
             method: "GET",
             headers: new Headers({
                 ...apiHeadersObject,
-                "Authorization": "GitHub-Bearer " + this.authToken,
+                Authorization: "GitHub-Bearer " + this.authToken,
             }),
         });
 
@@ -120,12 +135,12 @@ class CopilotRE {
             return {
                 status: "success",
                 body: parsedResponse,
-            }
+            };
         } catch (error) {
             return {
                 status: "error",
-                error: (error instanceof Error) ? error : Error("Unknown error"),
-            }
+                error: error instanceof Error ? error : Error("Unknown error"),
+            };
         }
     }
 
@@ -133,27 +148,27 @@ class CopilotRE {
      * Get all conversation history
      *
      * @returns {Promise<Result<ThreadResponse>>} - Result representing all conversation history / threads
-    */
+     */
     async getAllThreads(): Promise<Result<ThreadResponse>> {
         // Request for conversations
         const response = await request(THREADS_URL, {
             method: "GET",
             headers: new Headers({
                 ...webHeadersObject,
-                "Authorization": "GitHub-Bearer " + this.authToken,
+                Authorization: "GitHub-Bearer " + this.authToken,
             }),
         });
 
         // Check for success
         if (response.status != "success" && !response.body)
             return {
-                "status": "error",
+                status: "error",
                 error: response.error,
-            }
+            };
 
         try {
             // Parse response
-            const parsedResponse = await response.body?.json()
+            const parsedResponse = await response.body?.json();
             return {
                 status: "success",
                 body: parsedResponse,
@@ -162,8 +177,8 @@ class CopilotRE {
             // Handle errors
             return {
                 status: "error",
-                error: (error instanceof Error) ? error : Error("Unknown error"),
-            }
+                error: error instanceof Error ? error : Error("Unknown error"),
+            };
         }
     }
 
@@ -174,22 +189,19 @@ class CopilotRE {
      */
     async getThreadContent(threadID: string): Promise<Result<ThreadContent>> {
         // Make request for thread content
-        const response = await request(
-            `${THREADS_URL}/${threadID}/messages`,
-            {
-                method: "GET",
-                headers: new Headers({
-                    ...webHeadersObject,
-                    "Authorization": "GitHub-Bearer " + this.authToken,
-                }),
-            }
-        );
+        const response = await request(`${THREADS_URL}/${threadID}/messages`, {
+            method: "GET",
+            headers: new Headers({
+                ...webHeadersObject,
+                Authorization: "GitHub-Bearer " + this.authToken,
+            }),
+        });
 
         if (response.status != "success" || !response.body)
             return {
                 status: "error",
                 error: response.error,
-            }
+            };
 
         try {
             const parsedResponse = await response.body.json();
@@ -200,8 +212,8 @@ class CopilotRE {
         } catch (error) {
             return {
                 status: "error",
-                error: (error instanceof Error) ? error : Error("Unknown error"),
-            }
+                error: error instanceof Error ? error : Error("Unknown error"),
+            };
         }
     }
 
@@ -216,9 +228,9 @@ class CopilotRE {
             method: "POST",
             headers: new Headers({
                 ...apiHeadersObject,
-                "Authorization": "GitHub-Bearer " + this.authToken,
+                Authorization: "GitHub-Bearer " + this.authToken,
             }),
-            body: JSON.stringify({ "custom_copilot_id": null }),
+            body: JSON.stringify({ custom_copilot_id: null }),
         });
 
         // Check for errors
@@ -226,7 +238,7 @@ class CopilotRE {
             return {
                 status: "error",
                 error: response.error,
-            }
+            };
 
         try {
             // Try parsing and typecast NewThread
@@ -235,13 +247,13 @@ class CopilotRE {
             return {
                 status: "success",
                 body: parsedResponse,
-            }
+            };
         } catch (error) {
             // Handle errors
             return {
                 status: "error",
-                error: (error instanceof Error) ? error : Error("Unknown error"),
-            }
+                error: error instanceof Error ? error : Error("Unknown error"),
+            };
         }
     }
 
@@ -249,7 +261,7 @@ class CopilotRE {
      * Get list of installed extensions
      * NOTE: Some models don't support extensions, you can know about that
      * through getModels() method
-     * 
+     *
      * @returns {Promise<Result<Extension[]>>} - Result representing installed extensions
      */
     async getExtensions(): Promise<Result<Extension[]>> {
@@ -262,7 +274,7 @@ class CopilotRE {
             method: "GET",
             headers: new Headers({
                 ...apiHeadersObject,
-                "Authorization": "GitHub-Bearer " + this.authToken,
+                Authorization: "GitHub-Bearer " + this.authToken,
             }),
         });
 
@@ -271,7 +283,7 @@ class CopilotRE {
             return {
                 status: "error",
                 error: response.error,
-            }
+            };
 
         try {
             // Parse response
@@ -279,13 +291,12 @@ class CopilotRE {
             return {
                 status: "success",
                 body: parsedResponse,
-            }
-        }
-        catch (error) {
+            };
+        } catch (error) {
             return {
                 status: "error",
-                error: (error instanceof Error) ? error : Error("Unknown error"),
-            }
+                error: error instanceof Error ? error : Error("Unknown error"),
+            };
         }
     }
 
@@ -320,7 +331,7 @@ class CopilotRE {
             method: "GET",
             headers: new Headers({
                 ...webHeadersObject,
-                "Cookie": this.githubCookie,
+                Cookie: this.githubCookie,
             }),
         });
 
@@ -329,7 +340,7 @@ class CopilotRE {
             return {
                 status: "error",
                 error: response.error,
-            }
+            };
 
         try {
             // Parse response
@@ -337,18 +348,18 @@ class CopilotRE {
             return {
                 status: "success",
                 body: parsedResponse,
-            }
+            };
         } catch (error) {
             return {
                 status: "error",
-                error: (error instanceof Error) ? error : Error("Unknown error"),
-            }
+                error: error instanceof Error ? error : Error("Unknown error"),
+            };
         }
     }
 
     /**
      * Get details of a specific repository
-     * 
+     *
      * @param {number} databaseId - Database ID of the repository
      * @returns {Promise<Result<RepositoryDetail>>} - Result representing repository details
      */
@@ -358,7 +369,7 @@ class CopilotRE {
             method: "GET",
             headers: new Headers({
                 ...webHeadersObject,
-                "Cookie": this.githubCookie,
+                Cookie: this.githubCookie,
             }),
         });
 
@@ -367,7 +378,7 @@ class CopilotRE {
             return {
                 status: "error",
                 error: response.error,
-            }
+            };
 
         try {
             // Parse response
@@ -375,12 +386,12 @@ class CopilotRE {
             return {
                 status: "success",
                 body: parsedResponse,
-            }
+            };
         } catch (error) {
             return {
                 status: "error",
-                error: (error instanceof Error) ? error : Error("Unknown error"),
-            }
+                error: error instanceof Error ? error : Error("Unknown error"),
+            };
         }
     }
 
@@ -388,13 +399,13 @@ class CopilotRE {
      * Generate content using a specific model
      */
     async generateContent(params: {
-        prompt: string,
-        model: string,
-        threadID?: string,
-        sinkStream?: Writable, // Node JS stream
-        reference?: RepositoryDetail,    // Reference to repo i:e getRepoDetail()
-        githubCookie?: string,
-        authToken?: string,
+        prompt: string;
+        model: string;
+        threadID?: string;
+        sinkStream?: Writable; // Node JS stream
+        reference?: RepositoryDetail; // Reference to repo i:e getRepoDetail()
+        githubCookie?: string;
+        authToken?: string;
     }): Promise<Result<string>> {
         let {
             prompt,
@@ -406,8 +417,7 @@ class CopilotRE {
             authToken,
         } = params;
 
-        if (authToken)
-            this.authToken = authToken;
+        if (authToken) this.authToken = authToken;
 
         if (githubCookie) {
             // If user has pasted the whole cookie then the cookie token will contain
@@ -434,14 +444,16 @@ class CopilotRE {
             method: "POST",
             headers: {
                 ...apiHeadersObject,
-                "Authorization": "GitHub-Bearer " + this.authToken,
+                Authorization: "GitHub-Bearer " + this.authToken,
             },
             body: JSON.stringify({
                 confirmations: [],
                 content: prompt,
                 context: [],
                 currentURL: "https://github.com/copilot/c/" + threadID,
-                references: reference ? [{ ...reference, "type": "repository" }] : [],
+                references: reference
+                    ? [{ ...reference, type: "repository" }]
+                    : [],
                 customCopilotID: null,
                 customInstructions: [],
                 intent: "conversation",
@@ -458,7 +470,7 @@ class CopilotRE {
             return {
                 status: "error",
                 error: Error("Failed to generate content"),
-            }
+            };
         }
 
         // Get the reader from response
@@ -478,20 +490,20 @@ class CopilotRE {
 
                 return {
                     status: "success",
-                    body: message
+                    body: message,
                 };
             }
 
             const decoder = new TextDecoder();
             const text = decoder.decode(value);
             const lines = text.trim().split("data: ");
-            const buffer: Array<{ type: string, body: string, name?: string }> = [];
+            const buffer: Array<{ type: string; body: string; name?: string }> =
+                [];
 
             // Parse each line as seperate JSON
             lines.forEach((item: string) => {
                 const trimmed = item.trim();
-                if (trimmed === "")
-                    return;
+                if (trimmed === "") return;
 
                 try {
                     buffer.push(JSON.parse(trimmed));
@@ -511,11 +523,15 @@ class CopilotRE {
                 } else {
                     if (sinkStream) {
                         // Check type of function call
-                        const status = FUNCTIONS.find((item) => item.id === currentValue.name);
+                        const status = FUNCTIONS.find(
+                            (item) => item.id === currentValue.name,
+                        );
                         // If stream is TTY i:e terminal then write the status
                         if ("isTTY" in sinkStream && status?.id) {
                             // Prints what function calls are being made by model
-                            sinkStream.write(`\n\x1b[1;90m[${status.status.trim()}]\n\x1b[0m`);
+                            sinkStream.write(
+                                `\n\x1b[1;90m[${status.status.trim()}]\n\x1b[0m`,
+                            );
                         }
                     }
                 }

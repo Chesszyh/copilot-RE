@@ -2,7 +2,7 @@ import CopilotRE from "../src";
 
 if (!process.env.cookie) {
     console.error("Please set the cookie environment variable.");
-    process.exit(1)
+    process.exit(1);
 }
 
 // Init CopilotRE

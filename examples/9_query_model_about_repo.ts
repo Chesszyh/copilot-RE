@@ -2,7 +2,7 @@ import CopilotRE from "../src";
 
 if (!process.env.cookie) {
     console.error("Please set the cookie environment variable.");
-    process.exit(1)
+    process.exit(1);
 }
 
 // Init CopilotRE
@@ -37,8 +37,8 @@ if (repoDetail.status != "success") {
 }
 
 const response = await copilot.generateContent({
-    "prompt": "Can you find some bugs in this repository?",
-    "model": "gpt-4o",
-    "reference": repoDetail.body,
-    "sinkStream": process.stdout,
+    prompt: "Can you find some bugs in this repository?",
+    model: "gpt-4o",
+    reference: repoDetail.body,
+    sinkStream: process.stdout,
 });

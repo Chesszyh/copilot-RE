@@ -18,7 +18,7 @@ const models = await copilot.getModels();
 
 if (models.status == "success" && models.body) {
     const data = models.body.data;
-    console.log(data)
+    console.log(data);
     // Traverse through all models
     data.forEach((model) => {
         console.log(model.name + " - " + model.id);

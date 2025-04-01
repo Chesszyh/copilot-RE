@@ -243,7 +243,6 @@ interface Viewer {
     id: string;
 }
 
-
 interface RepositoryDetail {
     id: number;
     name: string;

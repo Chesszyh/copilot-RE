@@ -2,9 +2,8 @@ import CopilotRE from "../src";
 
 if (!process.env.cookie) {
     console.error("Please set the cookie environment variable.");
-    process.exit(1)
+    process.exit(1);
 }
-
 
 // Init CopilotRE
 const copilot = new CopilotRE({
@@ -17,12 +16,11 @@ await copilot.generateAuthToken();
 // Let's get all our old conversations
 const threads = await copilot.getAllThreads();
 
-
 // Let's get the first thread content
 const thread = threads.body?.threads[0];
 
 if (!thread) {
-    console.log(threads)
+    console.log(threads);
     console.error("No threads found");
     process.exit(1);
 }
