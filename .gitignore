@@ -136,3 +136,6 @@ dist
 .pnp.*
 bun.lock
 .cookie
+
+# docs(private)
+docs/Prompts.md

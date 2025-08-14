@@ -56,7 +56,7 @@ console.log(
     "[+] Supported commands: $models, $exit, $reset, $setmodel, $currentmodel",
 );
 
-let modelID = getCookie("modelId") || "gpt-4o";
+let modelID = getCookie("modelId") || "gpt-5-mini"; // Set default model to gpt-5-mini
 
 while (true) {
     console.log(createTerminalBorder("You"), "\x1b[0;35m");
@@ -78,6 +78,7 @@ while (true) {
         // Store in array of objects to beautifully display using console.table
         let availableModels: { model_id: string; model_name: string }[] = [];
 
+        // TODO Add `capabilities` for detailed output
         availableModels = models.body?.data.map((model) => {
             const modelName = model.name;
             const modelId = model.id;
